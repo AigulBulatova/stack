@@ -3,5 +3,6 @@
 
 int main ()
 {
-    
+    Stack stk1 = {};
+    stack_ctor (stk1);
 }
