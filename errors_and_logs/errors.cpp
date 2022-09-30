@@ -1,23 +1,10 @@
-#include <stdio.h>
+#include "errors.h"
 
 //------------------------------------------------------------------
 
-static FILE *log_file = NULL;
+#ifdef DEBUG
 
-//------------------------------------------------------------------
-
-int open_logfile ()
-{
-    log_file = fopen ("errors_and_logs/log_file.txt", "w")
-    if (log_file == NULL) {
-        //print
-        return ERROR; /////////
-    }
-}
-
-//------------------------------------------------------------------
-
-void _stack_dump (Stack *stack, int errors, const char *file, const unsigned int line, const char *func)
+int _stack_dump (Stack *stack, const char *file, const unsigned line, const char *func)
 {
     fprintf (log_file, "Stack_dump was called from %s at file %s, line number %d:\n", func, file, line);
     fprintf (log_file, "Stack [%p]", stack);
@@ -28,7 +15,8 @@ void _stack_dump (Stack *stack, int errors, const char *file, const unsigned int
     fprintf (log_file, " \"%s\" at %s at file %s(%d):\n", 
                         info->name, info->function, info->file, info->line);
 
-    print_error (errors);
+
+    print_error (stack->error_code);
     
     fprintf (log_file, "See more information about stack %s", info->name);
     fprintf (log_file, "{\n\t size = %lu\n\t capacity = %lu\n\t data = [%p]\n {\n", 
@@ -58,13 +46,23 @@ void _stack_dump (Stack *stack, int errors, const char *file, const unsigned int
     
     #endif
 
+    #ifdef HASH
+
+
+    #endif
+
     fprintf (log_file, "}\n");
 
+    return 0;
 }
+
+#endif
 
 //------------------------------------------------------------------
 
-int _stack_verify (Stack *stack)
+#ifdef DEBUG
+
+int _stack_verify (Stack *stack, const char *file, const unsigned line, const char *function)
 {
     int errors = 0;
 
@@ -93,12 +91,43 @@ int _stack_verify (Stack *stack)
 
     #endif
 
-    return errors;
+    stack->error_code += errors;
+
+    if (errors != 0) {
+        stack_dump (stack, file, line, function);
+        
+    }
+    
+    return 0;
 }
+
+#endif
 
 //------------------------------------------------------------------
 
-void print_error (int errors)
+#ifdef DEBUG
+
+int stack_pop_verify (Stack *stack, const char *file, const unsigned line, const char *function)
+{
+    int errors = 0;
+
+    if (stack->capacity == 0 || stack->size == 0) {
+        errors += STK_POP_ERR;
+    }
+
+    /////////
+    stack->error_code += errors;
+
+    _stack_verify (stack, file, line, function);
+
+    return 0;
+}
+
+#endif
+
+//------------------------------------------------------------------
+
+int print_stack_error (int errors)
 {
     if (errors & STK_NULL_PTR) {
         fprintf (log_file, "Null pointer to stack.\n");
@@ -120,5 +149,12 @@ void print_error (int errors)
         fprintf (log_file, "Stack overflow.\n");
 
     }
+
+}
+
+//------------------------------------------------------------------
+
+int print_error (int errors)
+{
 
 }

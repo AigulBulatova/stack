@@ -4,25 +4,31 @@
 
 int _stack_ctor (Stack *stack, const char *func_name, const char *file, const unsigned int line, const char *func)  
 {
-    stack->data = (elem_t *) DEFAULT_PTR;
+    stack->data = (elem_t *) NOT_ALLOC_YET_PTR;
 
     stack->capacity = 0;
     stack->size = 0;
+    stack->error_code = 0;
 
-    #ifdef CANARIES
+    #ifdef DEBUG
 
-        stack->canary1 = CANARY;
-        stack->canary2 = CANARY;
+        #ifdef CANARIES
 
+            stack->canary1 = CANARY_VALUE;
+            stack->canary2 = CANARY_VALUE;
+
+        #endif
+
+        Stack_info *info = stack->info;
+
+        info->name = func_name;    
+        info->function = func;
+        info->file = file;
+        info->line = line;
+    
     #endif
 
-    Stack_info *info = stack->info;
-
-    info->name = func_name;    
-    info->function = func;
-    info->file = file;
-    info->line = line;
-
+    return 0;
 }
 
 //------------------------------------------------------------------
@@ -32,10 +38,10 @@ int _stack_ctor (Stack *stack, const char *func_name, const char *file, const un
 int set_data_canaries (Stack *stack)
 {
     int64_t *canary = (int64_t *)stack->data - 1;
-    *canary = CANARY;
+    *canary = CANARY_VALUE;
     
     canary = (int64_t *) ((char *)stack->data + stack->capacity * sizeof(elem_t));
-    *canary = CANARY;
+    *canary = CANARY_VALUE;
 
     return 0;
 }
@@ -46,7 +52,9 @@ int set_data_canaries (Stack *stack)
 
 int stack_push (Stack *stack, elem_t value)
 {
-    stack_verify(stack);
+    #ifdef DEBUG
+        stack_verify(stack);
+    #endif
 
     if (stack->capacity == 0 && stack->size == 0) {
         int set_data_ret = set_data (stack, START_STK_SIZE);
@@ -60,25 +68,31 @@ int stack_push (Stack *stack, elem_t value)
 
     stack->data[stack->size++] = value;
 
+    #ifdef DEBUG
+        stack_verify (stack);
+    #endif
+
     return 0;
 }
 
 //------------------------------------------------------------------
 
 elem_t stack_pop (Stack *stack) 
-{
-    stack_verify_pop(stack);
-
-    if (stack->size == 0 || stack->capacity == 0) {
-        ///нет элементов
-    }
+{   
+    #ifdef DEBUG
+        stack_pop_verify(stack);
+    #endif
 
     elem_t value = stack->data[--stack->size];
 
-    if (stack->capacity == stack->size * 4) {
+    if (stack->capacity < stack->size * 4) {
         int resize_ret = stack_resize (stack, DECREASE);
         if (resize_ret) return resize_ret;
     }
+
+    #ifdef DEBUG
+        stack_verify (stack);
+    #endif
 
     return value;
 }
@@ -124,6 +138,11 @@ int set_data (Stack *stack, int size)
 
     }
 
+    #ifdef HASH
+
+    
+    #endif
+
     return 0;
 }
 
@@ -131,7 +150,9 @@ int set_data (Stack *stack, int size)
 
 int stack_resize (Stack *stack, int mode)
 {
-    stack_verify(stack);
+    #ifdef DEBUG
+        stack_verify(stack);
+    #endif
 
     if (stack->capacity == MAXCAPACITY && mode == INCREASE) {
         //error stackoverflow
@@ -165,7 +186,8 @@ int stack_resize (Stack *stack, int mode)
     #endif
 
     if (new_data == NULL) {
-        //////
+        print_error (NULL_PTR_ERR);
+        return NULL_PTR_ERR;
     }
 
     else {
@@ -184,106 +206,49 @@ int stack_resize (Stack *stack, int mode)
         #endif
     }
 
+    #ifdef DEBUG
+        stack_verify (stack);
+    #endif
+
     return 0;
 }
 
 //------------------------------------------------------------------
 
 int stack_dtor (Stack *stack)
-{
-    stack_verify(stack);
-
+{   
     free (stack->data);
 
     stack->data = POISON_PTR;
+    stack->capacity = POISON_VALUE;
+    stack->size = POISON_VALUE;
 
-    #ifdef CANARIES
-        stack->canary1 = POISON_VALUE;
-        stack->canary2 = POISON_VALUE;
+    #ifdef DEBUG
+
+        #ifdef CANARIES
+            stack->canary1 = POISON_VALUE;
+            stack->canary2 = POISON_VALUE;
+
+        #endif
+
+        Var_info *info = stack->info;
+
+        info->name = POISON_NAME;
+        info->function = POISON_NAME;
+        info->file = POISON_NAME;
+        info->line = POISON_VALUE;
+
+        #ifdef HASH
+
+            stack->stack_hash = POISON_VALUE;
+            stack->data_hash  = POISON_VALUE;
+
+        #endif
 
     #endif
 
-    stack->capacity = -1;
-    stack->size = -1;
-
-    Var_info *info = stack->info;
-
-    info->name = POISON_NAME;
-    info->function = POISON_NAME;
-    info->file = POISON_NAME;
-
-    info->line = -1;
-
     return 0;
 }
 
 //------------------------------------------------------------------
 
-unsigned int get_hash (char * key, unsigned int len)
-{
-    const unsigned int m = 0x5bd1e995;
-    const unsigned int seed = 0;
-    const int r = 24;
-
-    unsigned int h = seed ^ len;
-
-    const unsigned char * data = (const unsigned char *) key;
-    unsigned int k = 0;
-
-    while (len >= 4)
-    {
-        k  = data[0];
-        k |= data[1] << 8;
-        k |= data[2] << 16;
-        k |= data[3] << 24;
-
-        k *= m;
-        k ^= k >> r;
-        k *= m;
-
-        h *= m;
-        h ^= k;
-
-        data += 4;
-        len -= 4;
-    }
-
-    switch (len)
-    {
-        case 3: {
-            h ^= data[2] << 16;
-        }
-
-        case 2: {
-            h ^= data[1] << 8;
-        }
-        
-        case 1: {
-            h ^= data[0];
-            h *= m;
-        }
-    };
-
-    h ^= h >> 13;
-    h *= m;
-    h ^= h >> 15;
-
-    return h;
-}
-
-//------------------------------------------------------------------
-
-#ifdef HASH
-
-int set_hash (Stack *stack, unsigned int hash)
-{
-    stack_verify(stack);
-
-
-    stack->stack_hash = get_hash (stack, sizeof (Stack));
-    stack->data_hash = get_hash (stack->data, stack->capacity); 
-
-    return 0;
-}
-
-#endif
