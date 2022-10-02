@@ -1,13 +1,15 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+#include "errors.h"
+
 //------------------------------------------------------------------
 
 static FILE *log_file = NULL;
 
 //------------------------------------------------------------------
 
-int open_logfile (const char *logfile, const char *mode)
+int open_logfile (const char *filename, const char *mode)
 {
     if (filename == NULL) {
         fprintf (stderr, "Null pointer to log filename.\n");
@@ -19,7 +21,7 @@ int open_logfile (const char *logfile, const char *mode)
         return OPEN_FILE_ERR;
     }
 
-    log_file = fopen (logfile, mode);
+    log_file = fopen (filename, mode);
 
     if (log_file == NULL) {
         fprintf (stderr, "Can not open log file.\n");   

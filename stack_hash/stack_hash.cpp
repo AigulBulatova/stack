@@ -1,14 +1,16 @@
 #include "stack_hash.h"
+#include "../stack/stack.h"
 #include <stdio.h>
 
 //------------------------------------------------------------------
 
 typedef int64_t (*hash_func) (void *base, unsigned int len);
 
-static hash_func stack_hash_func = NULL;
+static hash_func stack_hash_func = DEFAULT_HASH_FUNC;
 
 //------------------------------------------------------------------
 
+#ifdef HASH 
 
 int64_t get_hash (void *base, unsigned int len) 
 {
@@ -25,7 +27,7 @@ int64_t get_hash (void *base, unsigned int len)
 
     while (len >= 4) {
 
-        k = data[0];
+        k  = data[0];
         k |= (data[1] << 8);
         k |= (data[2] << 16);
         k |= (data[3] << 24);
@@ -38,7 +40,7 @@ int64_t get_hash (void *base, unsigned int len)
         h ^= k;
 
         data += 4;
-        len -= 4;
+        len  -= 4;
 
     }
 
@@ -65,34 +67,64 @@ int64_t get_hash (void *base, unsigned int len)
     return h;
 }
 
+#endif
 
 //------------------------------------------------------------------
+
+#ifdef HASH 
 
 int stack_get_struct_hash (Stack *stack)
 {
-    #ifdef DEBUG
+    stack_verify (stack);
 
-        stack_verify (stack);
-
-    #endif
-
-    unsigned int struct_hash = get_hash (stack, sizeof (Stack));
+    unsigned int len = sizeof (Stack) - 2 * sizeof (int64_t);
 
     
 
-
 }
+
+#endif
 
 //------------------------------------------------------------------
 
-int stack_get_data_hash   (Stack *stack)
-{
+#ifdef HASH 
 
-}
-
-//------------------------------------------------------------------
-
-int stack_hash_func (Stack *stack)
+int stack_get_data_hash (Stack *stack)
 {
     stack_verify (stack);
+
+    #ifdef CANARIES
+
+        char *data = (char *) stack->data - sizeof (int64_t);
+        unsigned int len = stack->capacity * sizeof (elem_t) + 2 * sizeof (int64_t);
+
+    #else 
+
+        char *data = (char *) stack->data;
+        unsigned int len = stack->capacity * sizeof (elem_t);
+
+    #endif
+
+    stack->data_hash = stack_hash_func (data, len);
+
+    return 0;
 }
+
+#endif
+
+//------------------------------------------------------------------
+
+#ifdef HASH
+
+int stack_hash_func (int64_t (*get_hash_func) (void *base, unsigned int len))
+{
+    if (get_hash_func == NULL) {
+        /////err
+    }
+
+    stack_hash_func = get_hash_func;
+
+    return 0;
+}
+
+#endif

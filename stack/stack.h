@@ -7,24 +7,14 @@
 
 //------------------------------------------------------------------
 
-#define MAXCAPACITY 100
+#ifdef DEBUG
 
-#define NOT_ALLOC_YET_PTR 435
+    #define DEBUG_ARGS(...) __VA_ARGS__
 
-#define POISON_PTR 13
-
-#define CANARY_VALUE 0x
-
-#define START_STK_SIZE 2
-
-#define POISON_VALUE 228
-
-#define POISON_NAME "POISON"
-
-#ifdef CANARY
-#define ON_CANARY_PROT(...) __VA_ARGS__
 #else
-#define ON_CANARY_PROT(...)
+
+    #define DEBUG_ARGS(...)
+
 #endif
 
 //------------------------------------------------------------------
@@ -38,9 +28,9 @@ enum Modes {
 
 struct Var_info {
 
-    char *name;
-    char *function;
-    char *file;
+    const char *name;
+    const char *function;
+    const char *file;
     unsigned line;
 
 };
@@ -70,7 +60,7 @@ struct Stack {
 
         #ifdef HASH
             int64_t stack_hash;
-            int64_t base_hash;
+            int64_t data_hash;
         #endif
 
     #endif
@@ -83,23 +73,27 @@ struct Stack {
 //------------------------------------------------------------------
 
 #define stack_ctor(stack) \
-        _stack_ctor(stack, #stack + 1, LOCATION)
+        _stack_ctor(stack DEBUG_ARGS(, #stack + 1, LOCATION))
 
 //------------------------------------------------------------------
 
-int _stack_ctor  (Stack *stack, const char *func_name, const char *file, const unsigned int line, const char *func);
-
-int stack_push   (Stack *stack, elem_t value);
-
-elem_t stack_pop (Stack *stack);
-
-int stack_dtor   (Stack *stack);
-
-int stack_resize (Stack *stack, int mode);
+int _stack_ctor (Stack *stack DEBUG_ARGS(, const char *func_name, const char *file, const unsigned int line, const char *func));
 
 int set_data_canaries (Stack *stack);
 
+int stack_push (Stack *stack, elem_t value);
+
+elem_t stack_pop (Stack *stack);
+
 int set_data (Stack *stack, int size);
+
+int stack_resize (Stack *stack, int mode);
+
+int stack_dtor (Stack *stack);
+
+void *my_recalloc (void *ptr, size_t number, size_t prev_number, size_t elem_size);
+
+
 
 
 

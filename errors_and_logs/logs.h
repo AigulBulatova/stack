@@ -8,7 +8,7 @@
 
 //------------------------------------------------------------------
 
-int open_logfile ();
+int open_logfile (const char *filename, const char *mode);
 
 int close_logfile ();
 

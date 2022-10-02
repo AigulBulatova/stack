@@ -1,5 +1,5 @@
 OBJ   = obj/main.o      \
-		obj/stack.obj   \
+		obj/stack.o   \
 		obj/errors.o    \
 		obj/logs.o 		\
 		obj/hash.o 		\
@@ -41,22 +41,22 @@ all: global
 global: $(OBJ)
 	g++ $(OBJ) -o stack -lm $(FLAGS)
 
-obj/main.o: main.cpp stack/stack.h config.h 
+obj/main.o: main.cpp stack/stack.h config.h errors_and_logs/errors.h errors_and_logs/logs.h
 	g++ main.cpp -c -o obj/main.o $(FLAGS)
 
-obj/stack.o: stack/stack.cpp stack/stack.h config.h
+obj/stack.o: stack/stack.cpp stack/stack.h config.h errors_and_logs/errors.h stack_hash/stack_hash.h
 	g++ stack/stack.cpp -c -o obj/stack.o $(FLAGS)
 
-obj/errors.o: errors_and_logs/errors.cpp errors_and_logs/errors.h 
+obj/errors.o: errors_and_logs/errors.cpp errors_and_logs/errors.h errors_and_logs/logs.h stack_hash/stack_hash.h
 	g++ errors_and_logs/errors.cpp -c -o obj/errors.o $(FLAGS)
 
-obj/logs.o: errors_and_logs/logs.cpp errors_and_logs/logs.h 
-	g++ errors_and_logs/logc.cpp -c -o obj/logs.o $(FLAGS)
+obj/logs.o: errors_and_logs/logs.cpp errors_and_logs/logs.h config.h errors_and_logs/errors.h
+	g++ errors_and_logs/logs.cpp -c -o obj/logs.o $(FLAGS)
 
-obj/hash.o: stack_hash/stack_hash.cpp stack_hash/stack_hash.h 
+obj/hash.o: stack_hash/stack_hash.cpp stack_hash/stack_hash.h stack/stack.h config.h errors_and_logs/errors.h
 	g++ stack_hash/stack_hash.cpp -c -o obj/hash.o $(FLAGS)
 
 .PHONY: cleanup
 
 cleanup:
-	rm obj/*.o stack
+	rm obj/*.o stackk
