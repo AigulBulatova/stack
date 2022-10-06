@@ -1,10 +1,14 @@
 #include "stack_hash.h"
 #include "../stack/stack.h"
+#include "../errors_and_logs/errors.h"
+#include "../../config.h"
+
 #include <stdio.h>
+#include <assert.h>
 
 //------------------------------------------------------------------
 
-typedef int64_t (*hash_func) (void *base, unsigned int len);
+typedef int64_t (*hash_func) (void *base, unsigned long len);
 
 static hash_func stack_hash_func = DEFAULT_HASH_FUNC;
 
@@ -12,13 +16,13 @@ static hash_func stack_hash_func = DEFAULT_HASH_FUNC;
 
 #ifdef HASH 
 
-int64_t get_hash (void *base, unsigned int len) 
+int64_t get_hash (void *base, unsigned long len) 
 {
     const unsigned int m = 0x5bd1e995;
     const unsigned int seed = 0;
     const int r = 24;
 
-    unsigned int h = seed ^ len;
+    unsigned long h = seed ^ len;
 
     const unsigned char *data = (const unsigned char *) base;
     assert (base);
@@ -27,10 +31,10 @@ int64_t get_hash (void *base, unsigned int len)
 
     while (len >= 4) {
 
-        k  = data[0];
-        k |= (data[1] << 8);
-        k |= (data[2] << 16);
-        k |= (data[3] << 24);
+        k  = (unsigned) data[0];
+        k |= (unsigned) (data[1] << 8);
+        k |= (unsigned) (data[2] << 16);
+        k |= (unsigned) (data[3] << 24);
 
         k *= m;
         k ^= k >> r;
@@ -48,15 +52,18 @@ int64_t get_hash (void *base, unsigned int len)
     {
         case 3: {
             h ^= data[2] << 16;
+            break;
         }
 
         case 2: {
             h ^= data[1] << 8;
+            break;
         }
         
         case 1: {
             h ^= data[0];
             h *= m;
+            break;
         }
     };
 
@@ -64,7 +71,7 @@ int64_t get_hash (void *base, unsigned int len)
     h *= m;
     h ^= h >> 15;
 
-    return h;
+    return  (unsigned) h;
 }
 
 #endif
@@ -73,14 +80,19 @@ int64_t get_hash (void *base, unsigned int len)
 
 #ifdef HASH 
 
-int stack_get_struct_hash (Stack *stack)
+int stack_update_struct_hash (Stack *stack)
 {
-    stack_verify (stack);
+    assert (stack);
+    // if (stack->stack_hash != 0) {
+    //     stack_verify (stack);             /////////////////////////////////застревает здесь
+    // }
 
-    unsigned int len = sizeof (Stack) - 2 * sizeof (int64_t);
 
-    
+    unsigned long len = sizeof (Stack) - 2 * sizeof (int64_t);
 
+    stack->stack_hash = stack_hash_func (stack, len);
+
+    return 0; 
 }
 
 #endif
@@ -89,19 +101,21 @@ int stack_get_struct_hash (Stack *stack)
 
 #ifdef HASH 
 
-int stack_get_data_hash (Stack *stack)
+int stack_update_data_hash (Stack *stack)
 {
+    assert (stack);
+
     stack_verify (stack);
 
     #ifdef CANARIES
 
         char *data = (char *) stack->data - sizeof (int64_t);
-        unsigned int len = stack->capacity * sizeof (elem_t) + 2 * sizeof (int64_t);
+        unsigned long len = stack->capacity * sizeof (elem_t) + 2 * sizeof (int64_t);
 
     #else 
 
         char *data = (char *) stack->data;
-        unsigned int len = stack->capacity * sizeof (elem_t);
+        unsigned long len = stack->capacity * sizeof (elem_t);
 
     #endif
 
@@ -116,10 +130,11 @@ int stack_get_data_hash (Stack *stack)
 
 #ifdef HASH
 
-int stack_hash_func (int64_t (*get_hash_func) (void *base, unsigned int len))
+int set_stack_hash_func (int64_t (*get_hash_func) (void *base, unsigned long len))
 {
     if (get_hash_func == NULL) {
-        /////err
+        print_error (NULL_PTR_ERR);
+        return NULL_PTR_ERR;
     }
 
     stack_hash_func = get_hash_func;

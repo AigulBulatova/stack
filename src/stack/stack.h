@@ -2,7 +2,7 @@
 
 //------------------------------------------------------------------
 
-#include "../config.h"
+#include "../../config.h"
 #include <stdio.h>
 
 //------------------------------------------------------------------
@@ -29,7 +29,7 @@ enum Modes {
 struct Var_info {
 
     const char *name;
-    const char *function;
+    const char *func;
     const char *file;
     unsigned line;
 
@@ -77,26 +77,15 @@ struct Stack {
 
 //------------------------------------------------------------------
 
-int _stack_ctor (Stack *stack DEBUG_ARGS(, const char *func_name, const char *file, const unsigned int line, const char *func));
+// оставить в хедере только те функции, которые входят в API (push. pop. dtor. ctor)
+//  остальыне - статик в cpp файле + имя начинается на _
 
-int set_data_canaries (Stack *stack);
+int _stack_ctor (Stack *stack DEBUG_ARGS(, const char *func_name, const char *file, const unsigned int line, const char *func));
 
 int stack_push (Stack *stack, elem_t value);
 
 elem_t stack_pop (Stack *stack);
 
-int set_data (Stack *stack, int size);
-
-int stack_resize (Stack *stack, int mode);
-
 int stack_dtor (Stack *stack);
-
-void *my_recalloc (void *ptr, size_t number, size_t prev_number, size_t elem_size);
-
-
-
-
-
-
 
 

@@ -1,7 +1,7 @@
-#include <stdio.h>
-#include <stdarg.h>
-
 #include "errors.h"
+
+#include <stdio.h>
+#include <assert.h>
 
 //------------------------------------------------------------------
 
@@ -53,7 +53,29 @@ int close_logfile ()
 
 int _print_log_messsage (const char *file, const unsigned line, const char *func, char *format, ...)
 {
+    assert (format);
+    assert (file);
+    assert (func);
+
     fprintf (log_file, "Log message from file %s, function %s (line number %ul):\n", file, func, line);
+
+    va_list args = {};
+
+    va_start (args, format);
+    vfprintf (log_file, format, args);
+
+    va_end (args);
+
+    fprintf (log_file, "\n");
+
+    return 0;
+}
+
+//------------------------------------------------------------------
+
+int print_to_log (const char *format, ...) 
+{
+    assert (format);
 
     va_list args = {};
 

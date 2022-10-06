@@ -1,4 +1,4 @@
-#pragma once
+#pragma once //TODO stackconf
 
 #include <stdint.h>
 //---------------------------------------------------------
@@ -7,7 +7,7 @@
 typedef double elem_t;
 
 //Specifier for printing stack elements
-#define TYPE_SPEC "lf"
+#define TYPE_SPEC "lf" //TODO -> static const char* 
 
 //---------------------------------------------------------
 
@@ -38,10 +38,10 @@ const static int POISON_PTR = 13;
 const static int POISON_VALUE = 228;
 
 //Poisoned string for fields of stack->info to set in stack_dtor().
-const static char *POISON_NAME = "POISONED";
+const static char *POISON_NAME = "POISONED";                        //
 
 //Number of stack elements to allocate before first pushing. 
 const static int START_STK_SIZE = 2;
 
 //Default canary value for canary protection.
-const static int64_t CANARY_VALUE = 0xDEAD;
+const static int64_t CANARY_VALUE = 0xDEADDEAD;
