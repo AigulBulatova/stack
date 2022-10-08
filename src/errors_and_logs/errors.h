@@ -19,6 +19,7 @@ enum stack_rrors {
     STK_DATA_CANARY2_ERR   = 0x400,
     STK_STRUCT_HASH_ERR    = 0x800,
     STK_DATA_HASH_ERR      = 0x1000,
+    STK_INV_DATA_PTR       = 0x2000,
 };
 
 enum general_errors {
@@ -29,6 +30,7 @@ enum general_errors {
     RECALLOC_ERR   = -6,
     RESIZE_MOD_ERR = -7,
     SET_DATA_ERR   = -8,
+    MEMSET_ERR     = -9,
 };
 
 //------------------------------------------------------------------
@@ -45,8 +47,6 @@ enum general_errors {
 //------------------------------------------------------------------
 
 int _stack_verify (Stack *stack, const char *file, const unsigned line, const char *function);
-
-int _stack_pop_verify (Stack *stack, const char *file, const unsigned line, const char *function);
 
 int stack_struct_hash_check (Stack *stack);
 

@@ -83,9 +83,10 @@ int64_t get_hash (void *base, unsigned long len)
 int stack_update_struct_hash (Stack *stack)
 {
     assert (stack);
-    // if (stack->stack_hash != 0) {
-    //     stack_verify (stack);             /////////////////////////////////застревает здесь
-    // }
+
+    if (stack->stack_hash != 0) {
+        stack_verify (stack);             /////////////////////////////////застревает здесь
+    }
 
 
     unsigned long len = sizeof (Stack) - 2 * sizeof (int64_t);

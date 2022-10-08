@@ -8,8 +8,10 @@ int main ()
     int error = 0;
 
     #ifdef DEBUG
+
         error = open_logfile ("src/errors_and_logs/log_file.txt", "w");
         if (error < 0) return error;
+        
     #endif
 
     
@@ -17,9 +19,8 @@ int main ()
     stack_ctor (&stk1);
     error = stack_push (&stk1, 5);
     //stack_push (&stk1, 6);
-    //stack_push (&stk1, 7);
 
-    //_stack_dump(&stk1, __FILE__, __LINE__, __FUNCTION__);
+    _stack_dump(&stk1, __FILE__, __LINE__, __FUNCTION__);
 
     return 0;
 }

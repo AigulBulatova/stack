@@ -18,8 +18,5 @@ int _print_log_messsage (const char *file, const unsigned line, const char *func
 
 int print_to_log (const char *format, ...);
 
-// TODO 
-// int print_err_msg(int err_code, const char* err_str = NULL, ...)
-// если не компилится, то = NULL убрать -> 
 
 

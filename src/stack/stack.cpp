@@ -48,10 +48,8 @@ int _stack_ctor (Stack *stack DEBUG_ARGS(, const char *var_name, const char *fil
         stack->info = &info;
 
         #ifdef HASH
-            //printf ("hiiiiiii");
+
             int err = stack_update_struct_hash (stack);
-            //printf ("hiiiiiii");
-            //printf ("hash %ld", stack->stack_hash);
             if (err < 0) return err;
 
         #endif
@@ -71,7 +69,8 @@ static int _set_data_canaries (Stack *stack)
 
     #ifdef DEBUG
 
-        stack_verify (stack);                  // TODO define 
+        err = stack_verify (stack);                
+        if (err < 0) return err;
 
     #endif
 
@@ -134,7 +133,8 @@ static int _set_data (Stack *stack, int size)
     #endif
 
     if (data_ptr == NULL) {
-        ///////
+        print_error (NULL_PTR_ERR);
+        return NULL_PTR_ERR;
     }
 
     else {
@@ -160,9 +160,8 @@ static int _set_data (Stack *stack, int size)
 
             err = stack_update_data_hash (stack);
             if (err < 0) return err;          ////жив
-            printf ("hi");
-            err = stack_update_struct_hash (stack);
-             printf ("setdata");             ///////////умер
+    
+            err = stack_update_struct_hash (stack);   ///////////умер
             if (err < 0) return err;
         
         #endif
@@ -175,6 +174,7 @@ static int _set_data (Stack *stack, int size)
     return 0;
 }
 
+//------------------------------------------------------------------
 
 static void *_my_recalloc (void *ptr, size_t number, size_t prev_number, size_t elem_size) 
 {
@@ -205,13 +205,19 @@ static int _stack_resize (Stack *stack, int mode)
 
     #ifdef DEBUG
 
+        if (stack->capacity == MAXCAPACITY && mode == INCREASE) {
+            stack->error_code += STK_OVERFLOW;
+        }
+
         err = stack_verify(stack);
         if (err < 0) return err;
     
     #endif
 
-    if (stack->capacity == MAXCAPACITY && mode == INCREASE) {
-        
+
+    if (mode == START_ALLOC) {
+        err = _set_data (stack, START_STK_SIZE);
+        if (err < 0) return err;
     }
 
     size_t prev_capacity = stack->capacity;
@@ -293,6 +299,8 @@ static int _stack_resize (Stack *stack, int mode)
     return 0;
 }
 
+//------------------------------------------------------------------
+
 int stack_push (Stack *stack, elem_t value)
 {
     int err = 0;
@@ -304,14 +312,13 @@ int stack_push (Stack *stack, elem_t value)
     #endif
 
     if (stack->capacity == 0 && stack->size == 0) {
-        err = _set_data (stack, START_STK_SIZE);
+        err = _stack_resize (stack, START_ALLOC);
         if (err ) return err;
     }
 
     if (stack->size >= stack->capacity) {
         err = _stack_resize (stack, INCREASE);
-        printf ("(%d)", err); // TODO stack_resize(stack, START_ALLOC)
-        if (err) return err;              // TODO enum argument
+        if (err) return err;              
     }
 
     stack->data[stack->size++] = value;
@@ -341,21 +348,25 @@ int stack_push (Stack *stack, elem_t value)
 elem_t stack_pop (Stack *stack) 
 {   
     int err = 0;
+
     #ifdef DEBUG
 
-        err = stack_pop_verify(stack); ///////////
+        if (stack->capacity == 0 || stack->size == 0) {
+            stack->error_code += STK_POP_ERR;
+        } 
+
+        err = stack_verify (stack);
+        if (err < 0) return 0;
     
     #endif
 
     elem_t value = stack->data[--stack->size];
 
-//    _stack_clean_pop_elem (stack); 
-
-
     elem_t *poped_elem = stack->data + stack->size;
 
     if (memset (poped_elem, 0, sizeof (elem_t)) == NULL) {
-        ////memset err
+        print_error (MEMSET_ERR);
+        return MEMSET_ERR;
     }
 
     if (stack->capacity < stack->size * 4) {
@@ -382,207 +393,6 @@ elem_t stack_pop (Stack *stack)
 
     return value;
 }
-
-//------------------------------------------------------------------
-
-// static int _stack_clean_pop_elem (Stack *stack)
-// {
-//     #ifdef DEBUG
-
-//         stack_verify (stack); // TODO:  убрать 
-
-//     #endif
-
-//     if (stack == NULL) {
-//         print_error (NULL_PTR_ERR);
-//         return NULL_PTR_ERR;
-//     }
-
-//     elem_t *poped_elem = (stack->data + stack->size);  
-
-//     memset (poped_elem, 0, sizeof (elem_t));
-
-//     #ifdef DEBUG
-
-//         #ifdef HASH
-
-//            int err = stack_update_struct_hash (stack);
-//            if (err < 0) return err;
-
-//         #endif
-    
-//         stack_verify (stack);
-
-//     #endif
-
-//     return 0; 
-// }
-
-//------------------------------------------------------------------
-
-// static int _set_data (Stack *stack, int size) 
-// {
-//     int err = 0;
-
-//     #ifdef DEBUG
-
-//         err = stack_verify(stack);
-//         if (err < 0) return err;
-
-//     #endif
-
-//     if (size < 1) {
-//         print_error (SET_DATA_ERR);
-//         return SET_DATA_ERR;
-//     }
-
-//     #ifdef CANARIES
-
-//         elem_t *data_ptr = (elem_t *) calloc (size * sizeof(elem_t) + 2 * sizeof(int64_t), sizeof(char));
-//         // TODO проверять сразу 
-
-//     #else
-
-//         elem_t *data_ptr = (elem_t *) calloc (size, sizeof(elem_t));
-
-//     #endif
-
-//     if (data_ptr == NULL) {
-//         ///////
-//     }
-
-//     else {
-
-//         #ifdef CANARIES
-
-//             char *set_data_ptr = (char *) data_ptr + sizeof(int64_t);
-//             stack->data = (elem_t *) set_data_ptr;
-
-//             _set_data_canaries(stack);
-
-//         #else 
-
-//             stack->data = data_ptr;
-
-//         #endif
-
-//     }
-
-//     #ifdef DEBUG
-
-//         #ifdef HASH
-
-//             err = stack_update_data_hash (stack);
-//             if (err < 0) return err;
-
-//             err = stack_update_struct_hash (stack);
-//             if (err < 0) return err;
-        
-//         #endif
-
-//         err = stack_verify (stack);
-//         if (err < 0) return err;
-
-//     #endif
-
-//     return 0;
-// }
-
-//------------------------------------------------------------------
-
-// static int _stack_resize (Stack *stack, int mode)
-// {
-//     int err = 0;
-
-//     #ifdef DEBUG
-
-//         err = stack_verify(stack);
-//         if (err < 0) return err;
-    
-//     #endif
-
-//     if (stack->capacity == MAXCAPACITY && mode == INCREASE) {
-        
-//     }
-
-//     size_t prev_capacity = stack->capacity;
-
-//     switch (mode) {
-
-//         case INCREASE: {
-//             stack->capacity *= 2;
-//             break;
-//         }
-
-//         case DECREASE: {
-//             stack->capacity /= 2;
-//             break;
-//         }
-
-//         default: {
-//             print_error (RESIZE_MOD_ERR);
-//             return RESIZE_MOD_ERR;
-//         }
-//     }
-
-//     #ifdef CANARIES
-
-//         char *canary1_ptr = (char *) stack->data - sizeof (int64_t);
-
-//         size_t      size = stack->capacity * sizeof (elem_t) +     sizeof (int64_t);
-//         size_t prev_size =   prev_capacity * sizeof (elem_t) + 2 * sizeof (int64_t);
-
-//         char *new_data = (char *) _my_recalloc (canary1_ptr, size, prev_size, sizeof (char));
-
-
-//     #else
-
-//         elem_t *new_data = (elem_t *) _my_recalloc (stack->data, stack->capacity, prev_capacity, sizeof (elem_t));
-
-//     #endif
-
-//     if (new_data == NULL) {
-
-//         print_error (RECALLOC_ERR);
-//         return RECALLOC_ERR;
-    
-//     }
-
-//     else {
-
-//         #ifdef CANARIES
-
-//             char *data_ptr = (char *) new_data + sizeof(int64_t);
-//             stack->data = (elem_t *) data_ptr;
-
-//             _set_data_canaries (stack);
-
-//         #else 
-
-//             stack->data = new_data;
-
-//         #endif
-//     }
-
-//     #ifdef DEBUG
-
-//         #ifdef HASH
-
-//             err = stack_update_data_hash (stack);
-//             if (err < 0) return err;
-
-//             err = stack_update_struct_hash (stack);
-//             if (err < 0) return err;
-
-//         #endif
-
-//         err = stack_verify (stack);
-//         if (err < 0) return err;
-
-//     #endif
-
-//     return 0;
-// }
 
 //------------------------------------------------------------------
 
@@ -630,28 +440,3 @@ int stack_dtor (Stack *stack)
 
     return 0;
 }
-
-//------------------------------------------------------------------
-
-// static void *_my_recalloc (void *ptr, size_t number, size_t prev_number, size_t elem_size) 
-// {
-//     if (ptr == NULL) {
-//         return NULL;
-//     }
-
-//     void *new_ptr = realloc (ptr, number * elem_size);
-
-//     if (new_ptr == NULL) {
-//         return NULL;
-//     }
-
-//     if (number > prev_number) {
-//         char *poped_elem = (char *) new_ptr + prev_number * elem_size;
-
-//         memset (poped_elem, 0, (number - prev_number) * elem_size);
-//     }
-
-//     return new_ptr;
-// }
-
-// //------------------------------------------------------------------

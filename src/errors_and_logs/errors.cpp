@@ -11,17 +11,19 @@
 
 int _stack_dump (Stack *stack, const char *file, const unsigned line, const char *func)
 {
+    print_to_log ("-----------------------------------------------------------------------------\n");
+
     print_to_log ("Stack_dump was called from %s at file %s, line number %u:\n", func, file, line);
     print_to_log ("Stack [%p]", stack);
 
     Var_info *info = stack->info;
     assert(info);
-    printf ("hi\n");
+
     print_to_log (" \"%s\" at %s at file %s(%u):\n", 
                         info->name, info->func, info->file, info->line);
 
 
-    // print_error (stack->error_code);
+    print_stack_error (stack->error_code);
     
     print_to_log ("See more information about stack %s", info->name);
     print_to_log ("{\n\t size = %lu\n\t capacity = %lu\n\t data = [%p]\n {\n", 
@@ -66,6 +68,8 @@ int _stack_dump (Stack *stack, const char *file, const unsigned line, const char
 
     print_to_log ("}\n");
 
+    print_to_log ("-----------------------------------------------------------------------------\n");
+
     return 0;
 }
 
@@ -99,6 +103,9 @@ int _stack_verify (Stack *stack, const char *file, const unsigned line, const ch
         errors += STK_OVERFLOW;
     }
 
+    if (stack->capacity > 0 && (stack->data == NULL || stack->data == (elem_t *) NOT_ALLOC_YET_PTR)) {
+        errors += STK_INV_DATA_PTR;
+    }
 
     #ifdef CANARIES
 
@@ -137,27 +144,6 @@ int _stack_verify (Stack *stack, const char *file, const unsigned line, const ch
 
 //------------------------------------------------------------------
 
-#ifdef DEBUG
-
-int _stack_pop_verify (Stack *stack, const char *file, const unsigned line, const char *function)
-{
-    int errors = 0;
-
-    if (stack->capacity == 0 || stack->size == 0) { // TODO: emplace in pop 
-        errors += STK_POP_ERR;
-    }
-
-    stack->error_code += errors;
-
-    _stack_verify (stack, file, line, function);
-
-    return 0;
-}
-
-#endif
-
-//------------------------------------------------------------------
-
 #ifdef HASH
 
 int stack_struct_hash_check (Stack *stack)
@@ -167,7 +153,6 @@ int stack_struct_hash_check (Stack *stack)
     int64_t struct_hash = get_hash (stack, struct_len);
 
     if (struct_hash != stack->stack_hash) {
-        //printf ("%ld    %ld\n", struct_hash, stack->stack_hash);
         return -1;
     }
 
@@ -322,7 +307,7 @@ int _print_error (int error, FILE *err_file, const char *file, const unsigned li
 
         case NULL_PTR_ERR: {
 
-            fprintf (err_file, "Null pointer.\n"); //////////////////
+            fprintf (err_file, "Null pointer.\n"); 
             break;
         }
 
@@ -341,6 +326,12 @@ int _print_error (int error, FILE *err_file, const char *file, const unsigned li
         case SET_DATA_ERR: {
 
             fprintf (err_file, "Invalid size to set stack data.\n");
+            break;
+        }
+
+        case (MEMSET_ERR): {
+            
+            fprintf (err_file, "Memset error.\n");
             break;
         }
         
