@@ -19,8 +19,8 @@ int _stack_dump (Stack *stack, const char *file, const unsigned line, const char
     Var_info *info = stack->info;
     assert(info);
 
-    print_to_log (" \"%s\" at %s at file %s(%u):\n", 
-                        info->name, info->func, info->file, info->line);
+    //print_to_log (" \"%s\" at %s at file %s(%u):\n", 
+    //                    info->name, info->func, info->file, info->line);
 
 
     print_stack_error (stack->error_code);
@@ -131,7 +131,7 @@ int _stack_verify (Stack *stack, const char *file, const unsigned line, const ch
     stack->error_code += errors;
 
     if (errors != 0) {
-   
+
         _stack_dump (stack, file, line, function);
         return -1;
 

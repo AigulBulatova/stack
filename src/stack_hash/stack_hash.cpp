@@ -84,11 +84,6 @@ int stack_update_struct_hash (Stack *stack)
 {
     assert (stack);
 
-    if (stack->stack_hash != 0) {
-        stack_verify (stack);             /////////////////////////////////застревает здесь
-    }
-
-
     unsigned long len = sizeof (Stack) - 2 * sizeof (int64_t);
 
     stack->stack_hash = stack_hash_func (stack, len);
@@ -105,8 +100,6 @@ int stack_update_struct_hash (Stack *stack)
 int stack_update_data_hash (Stack *stack)
 {
     assert (stack);
-
-    stack_verify (stack);
 
     #ifdef CANARIES
 

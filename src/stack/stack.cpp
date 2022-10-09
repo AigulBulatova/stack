@@ -9,7 +9,7 @@
 
 //------------------------------------------------------------------
 
-int var_info_ctor (Var_info *info, const char *var_name, const char *func, const char *file, unsigned int line)
+static int var_info_ctor (Var_info *info, const char *var_name, const char *func, const char *file, unsigned int line)
 {
     assert (info);
 
@@ -90,7 +90,6 @@ static int _set_data_canaries (Stack *stack)
         #endif
 
         err = stack_verify (stack);
-
         if (err < 0) return err;
 
     #endif
@@ -112,8 +111,10 @@ static int _set_data (Stack *stack, int size)
     #ifdef DEBUG
 
         err = stack_verify(stack);
-        if (err < 0) return err;
-
+        if (err < 0) {
+            printf ("verify\n");
+            return err;
+        }
     #endif
 
     if (size < 1) {
@@ -133,7 +134,7 @@ static int _set_data (Stack *stack, int size)
     #endif
 
     if (data_ptr == NULL) {
-        print_error (NULL_PTR_ERR);
+        print_error (NULL_PTR_ERR);             ////жив
         return NULL_PTR_ERR;
     }
 
@@ -142,9 +143,9 @@ static int _set_data (Stack *stack, int size)
         #ifdef CANARIES
 
             char *set_data_ptr = (char *) data_ptr + sizeof(int64_t);
-            stack->data = (elem_t *) set_data_ptr;   ///////////////////////здесь живой
+            stack->data = (elem_t *) set_data_ptr;   
 
-            _set_data_canaries(stack); ///здесь тоже
+            _set_data_canaries(stack); 
 
         #else 
 
@@ -159,14 +160,14 @@ static int _set_data (Stack *stack, int size)
         #ifdef HASH
 
             err = stack_update_data_hash (stack);
-            if (err < 0) return err;          ////жив
+            if (err < 0) return err;       
     
-            err = stack_update_struct_hash (stack);   ///////////умер
+            err = stack_update_struct_hash (stack);   
             if (err < 0) return err;
         
         #endif
 
-        err = stack_verify (stack);
+        err = stack_verify (stack);         ////////вот тут умирает
         if (err < 0) return err;
 
     #endif
@@ -217,7 +218,7 @@ static int _stack_resize (Stack *stack, int mode)
 
     if (mode == START_ALLOC) {
         err = _set_data (stack, START_STK_SIZE);
-        if (err < 0) return err;
+        if (err < 0) return err;        ///////тут умирает
     }
 
     size_t prev_capacity = stack->capacity;
@@ -307,7 +308,10 @@ int stack_push (Stack *stack, elem_t value)
     #ifdef DEBUG
 
         err = stack_verify(stack);
-        if (err < 0) return err;
+        if (err < 0) {
+            printf ("verify\n");
+            return err;
+        }
 
     #endif
 
@@ -318,7 +322,7 @@ int stack_push (Stack *stack, elem_t value)
 
     if (stack->size >= stack->capacity) {
         err = _stack_resize (stack, INCREASE);
-        if (err) return err;              
+        if (err) return err;     
     }
 
     stack->data[stack->size++] = value;
@@ -406,8 +410,19 @@ int stack_dtor (Stack *stack)
         if (err < 0) return err;
 
     #endif
-    
-    free (stack->data);
+
+    #ifdef CANARIES
+
+        char *data = (char *) stack->data - sizeof(int64_t);
+
+    #else 
+
+        char *data = (char *) stack->data;
+
+    #endif
+
+
+    free (data);
 
     stack->data = (elem_t *) POISON_PTR;
     stack->capacity = POISON_VALUE;
@@ -415,6 +430,7 @@ int stack_dtor (Stack *stack)
 
     #ifdef DEBUG
 
+        stack->error_code = 0;
         #ifdef CANARIES
 
             stack->canary1 = POISON_VALUE;
