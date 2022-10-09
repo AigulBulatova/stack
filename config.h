@@ -7,7 +7,7 @@
 typedef double elem_t;
 
 //Specifier for printing stack elements
-#define TYPE_SPEC "lf" //TODO -> static const char* 
+#define TYPE_SPEC "%lf" //TODO -> static const char* 
 
 //---------------------------------------------------------
 

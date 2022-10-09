@@ -41,11 +41,10 @@ int _stack_ctor (Stack *stack DEBUG_ARGS(, const char *var_name, const char *fil
 
         #endif
 
-        Var_info info = {};
+        Var_info *info = (Var_info *) calloc (1, sizeof (Var_info));
+        var_info_ctor (info, var_name, func, file, line);
 
-        var_info_ctor (&info, var_name, func, file, line);
-
-        stack->info = &info;
+        stack->info = info;
 
         #ifdef HASH
 
@@ -67,18 +66,19 @@ static int _set_data_canaries (Stack *stack)
 {
     int err = 0;
 
-    #ifdef DEBUG
+    // #ifdef DEBUG
 
-        err = stack_verify (stack);                
-        if (err < 0) return err;
+    //     err = stack_verify (stack);                
+    //     if (err < 0) return err;
 
-    #endif
+    // #endif
 
     int64_t *canary_l = (int64_t *) stack->data - 1;
     *canary_l = CANARY_VALUE;
     
     int64_t *canary_r = (int64_t *) (stack->data + stack->capacity);
     *canary_r = CANARY_VALUE;
+    printf ("%p  %p  %p\n", canary_l, stack->data, canary_r);   
 
     #ifdef DEBUG
 
@@ -108,24 +108,25 @@ static int _set_data (Stack *stack, int size)
     int err = 0;
 
 
-    #ifdef DEBUG
+    // #ifdef DEBUG
 
-        err = stack_verify(stack);
-        if (err < 0) {
-            printf ("verify\n");
-            return err;
-        }
-    #endif
+    //     err = stack_verify(stack);
+    //     if (err < 0) {
+    //         printf ("verify\n");
+    //         return err;
+    //     }
+    // #endif
 
     if (size < 1) {
         print_error (SET_DATA_ERR);
         return SET_DATA_ERR;
     }
 
+    stack->capacity = START_STK_SIZE;
+
     #ifdef CANARIES
 
         elem_t *data_ptr = (elem_t *) calloc (size * sizeof(elem_t) + 2 * sizeof(int64_t), sizeof(char));
-        // TODO проверять сразу 
 
     #else
 
@@ -134,7 +135,7 @@ static int _set_data (Stack *stack, int size)
     #endif
 
     if (data_ptr == NULL) {
-        print_error (NULL_PTR_ERR);             ////жив
+        print_error (NULL_PTR_ERR);          
         return NULL_PTR_ERR;
     }
 
@@ -167,7 +168,7 @@ static int _set_data (Stack *stack, int size)
         
         #endif
 
-        err = stack_verify (stack);         ////////вот тут умирает
+        err = stack_verify (stack);         
         if (err < 0) return err;
 
     #endif
@@ -204,21 +205,9 @@ static int _stack_resize (Stack *stack, int mode)
 {
     int err = 0;
 
-    #ifdef DEBUG
-
-        if (stack->capacity == MAXCAPACITY && mode == INCREASE) {
-            stack->error_code += STK_OVERFLOW;
-        }
-
-        err = stack_verify(stack);
-        if (err < 0) return err;
-    
-    #endif
-
-
-    if (mode == START_ALLOC) {
-        err = _set_data (stack, START_STK_SIZE);
-        if (err < 0) return err;        ///////тут умирает
+    if (stack->capacity == MAXCAPACITY && mode == INCREASE) {
+        print_to_log ("Stack overflow");
+        return -1;            
     }
 
     size_t prev_capacity = stack->capacity;
@@ -235,6 +224,12 @@ static int _stack_resize (Stack *stack, int mode)
             break;
         }
 
+        case START_ALLOC: {
+            err = _set_data (stack, START_STK_SIZE); 
+            if (err < 0) return err;
+            break;
+        }
+
         default: {
             print_error (RESIZE_MOD_ERR);
             return RESIZE_MOD_ERR;
@@ -245,11 +240,10 @@ static int _stack_resize (Stack *stack, int mode)
 
         char *canary1_ptr = (char *) stack->data - sizeof (int64_t);
 
-        size_t      size = stack->capacity * sizeof (elem_t) +     sizeof (int64_t);
+        size_t      size = stack->capacity * sizeof (elem_t) + 2 * sizeof (int64_t);
         size_t prev_size =   prev_capacity * sizeof (elem_t) + 2 * sizeof (int64_t);
 
         char *new_data = (char *) _my_recalloc (canary1_ptr, size, prev_size, sizeof (char));
-
 
     #else
 
@@ -324,6 +318,7 @@ int stack_push (Stack *stack, elem_t value)
         err = _stack_resize (stack, INCREASE);
         if (err) return err;     
     }
+    printf ("%d  %d\n", stack->capacity, stack->size);
 
     stack->data[stack->size++] = value;
 
@@ -332,14 +327,15 @@ int stack_push (Stack *stack, elem_t value)
         #ifdef HASH
 
             err = stack_update_data_hash (stack);
-            if (err < 0) return err;                
+            if (err < 0) return err;             
             
             err = stack_update_struct_hash (stack);
             if (err < 0) return err;
 
         #endif
+    printf ("%d  %d\n", stack->capacity, stack->size);
 
-        err = stack_verify (stack);
+        err = stack_verify (stack);          ///umer
         if (err < 0) return err;
 
     #endif
@@ -444,6 +440,8 @@ int stack_dtor (Stack *stack)
         info->func = POISON_NAME;  
         info->file = POISON_NAME;
         info->line = POISON_VALUE;
+
+        free (stack->info);
 
         #ifdef HASH
 

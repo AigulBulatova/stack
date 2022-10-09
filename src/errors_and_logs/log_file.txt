@@ -1,0 +1,120 @@
+-----------------------------------------------------------------------------
+
+Stack_dump was called from _set_data_canaries at file src/stack/stack.cpp, line number 92:
+
+Stack [0x7fff24a47970]
+ "stk1" at main at file main.cpp(18):
+
+Stack struct hash protection was broken.
+
+See more information about stack stk1
+{
+	 size = 0
+	 capacity = 2
+	 data = [0x603000000048]
+ {
+
+		[0] = 
+0.000000
+
+
+		[1] = 
+0.000000
+
+
+}
+
+Values of canaries: 
+
+	Stack canaries: 
+		stack_canary1 = 3735936685 
+		stack_canary2 = 3735936685
+
+	Data canaries: 
+		data_canary1 = 3735936685 
+		data_canary2 = 0
+
+}
+
+-----------------------------------------------------------------------------
+
+-----------------------------------------------------------------------------
+
+Stack_dump was called from _set_data_canaries at file src/stack/stack.cpp, line number 92:
+
+Stack [0x7fff24a47970]
+ "stk1" at main at file main.cpp(18):
+
+Stack data hash protection was broken.
+
+See more information about stack stk1
+{
+	 size = 0
+	 capacity = 2
+	 data = [0x603000000078]
+ {
+
+		[0] = 
+0.000000
+
+
+		[1] = 
+0.000000
+
+
+}
+
+Values of canaries: 
+
+	Stack canaries: 
+		stack_canary1 = 3735936685 
+		stack_canary2 = 3735936685
+
+	Data canaries: 
+		data_canary1 = 3735936685 
+		data_canary2 = 0
+
+}
+
+-----------------------------------------------------------------------------
+
+-----------------------------------------------------------------------------
+
+Stack_dump was called from main at file main.cpp, line number 26:
+
+Stack [0x7fff24a47970]
+ "stk1" at main at file main.cpp(18):
+
+Stack data hash protection was broken.
+
+See more information about stack stk1
+{
+	 size = 1
+	 capacity = 2
+	 data = [0x603000000078]
+ {
+
+		[0] = 
+5.000000
+
+
+		[1] = 
+0.000000
+
+
+}
+
+Values of canaries: 
+
+	Stack canaries: 
+		stack_canary1 = 3735936685 
+		stack_canary2 = 3735936685
+
+	Data canaries: 
+		data_canary1 = 3735936685 
+		data_canary2 = 70454643523584
+
+}
+
+-----------------------------------------------------------------------------
+
