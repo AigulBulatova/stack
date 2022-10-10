@@ -1,8 +1,8 @@
 -----------------------------------------------------------------------------
 
-Stack_dump was called from _set_data_canaries at file src/stack/stack.cpp, line number 92:
+Stack_dump was called from _set_data_canaries at file src/stack/stack.cpp, line number 91:
 
-Stack [0x7fff24a47970]
+Stack [0x7ffcb36a27d0]
  "stk1" at main at file main.cpp(18):
 
 Stack struct hash protection was broken.
@@ -40,9 +40,9 @@ Values of canaries:
 
 -----------------------------------------------------------------------------
 
-Stack_dump was called from _set_data_canaries at file src/stack/stack.cpp, line number 92:
+Stack_dump was called from _set_data_canaries at file src/stack/stack.cpp, line number 91:
 
-Stack [0x7fff24a47970]
+Stack [0x7ffcb36a27d0]
  "stk1" at main at file main.cpp(18):
 
 Stack data hash protection was broken.
@@ -82,7 +82,7 @@ Values of canaries:
 
 Stack_dump was called from main at file main.cpp, line number 26:
 
-Stack [0x7fff24a47970]
+Stack [0x7ffcb36a27d0]
  "stk1" at main at file main.cpp(18):
 
 Stack data hash protection was broken.

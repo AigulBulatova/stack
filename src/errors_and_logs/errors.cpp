@@ -176,7 +176,6 @@ int stack_struct_hash_check (Stack *stack)
     int64_t struct_hash = get_hash ((char *) stack, struct_len);
 
     if (struct_hash != stack->stack_hash) {
-        printf ("%d %d", struct_hash, stack->stack_hash);
         return -1;
     }
 
@@ -195,19 +194,9 @@ int stack_data_hash_check (Stack *stack)
         return 0;
     }
 
-    #ifdef CANARIES
+    unsigned long data_len = stack->capacity * sizeof (elem_t);
 
-        char *data = (char *)stack->data - sizeof (int64_t);
-        unsigned long data_len = stack->capacity * sizeof (elem_t) + 2 * sizeof (int64_t);
-    
-    #else 
-
-        char *data = (char *) stack->data;
-        unsigned long data_len = stack->capacity * sizeof (elem_t);
-
-    #endif
-
-    int64_t data_hash = get_hash (data, data_len);
+    int64_t data_hash = get_hash (stack->data, data_len);
 
     if (data_hash != stack->data_hash) {
         return -1;
@@ -312,57 +301,23 @@ int print_stack_error (int errors)
 
 //------------------------------------------------------------------
 
-int _print_error (int error, FILE *err_file, const char *file, const unsigned line, const char *func)
+int _print_error ( const char *file, const unsigned line, const char *func, const char *format, ...)
 {
-    fprintf (err_file, "Error message from file %s, function %s (line %u): ", file, func, line);
+    assert (file);
+    assert (func);
+    assert (format);
 
-    switch (error) {
-        case OPEN_FILE_ERR: {
+    fprintf (stderr, "Error message from file %s, function %s (line %u): ", file, func, line);
 
-            fprintf (err_file, "Can not open file.\n");
-            break;
-        }
+    va_list args = {};
 
-        case CLOSE_FILE_ERR: {
-            
-            fprintf (err_file, "Can not close file.\n");
-            break;
-        }
+    va_start (args, format);
+    vfprintf (stderr, format, args);
 
-        case NULL_PTR_ERR: {
+    va_end (args);
 
-            fprintf (err_file, "Null pointer.\n"); 
-            break;
-        }
-
-        case NO_MEMORY_ERR: {
-
-            fprintf (err_file, "Can not allocate memory.\n");
-            break;
-        }
-
-        case RESIZE_MOD_ERR: {
-
-            fprintf (err_file, "Unexpected resize mode.\n");
-            break;
-        }
-
-        case SET_DATA_ERR: {
-
-            fprintf (err_file, "Invalid size to set stack data.\n");
-            break;
-        }
-
-        case (MEMSET_ERR): {
-            
-            fprintf (err_file, "Memset error.\n");
-            break;
-        }
-        
-        default: {
-            fprintf (err_file, "Unexpected error code.\n");
-        }
-    }
+    fprintf (stderr, "\n");
 
     return 0;
+    
 }

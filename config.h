@@ -37,9 +37,6 @@ const static int POISON_PTR = 13;
 //Poisoned value for stack fields to set in stack_dtor(). 
 const static int POISON_VALUE = 228;
 
-//Poisoned string for fields of stack->info to set in stack_dtor().
-const static char *POISON_NAME = "POISONED";                        //
-
 //Number of stack elements to allocate before first pushing. 
 const static int START_STK_SIZE = 2;
 

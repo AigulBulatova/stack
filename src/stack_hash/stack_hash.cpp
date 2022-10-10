@@ -86,7 +86,7 @@ int stack_update_struct_hash (Stack *stack)
 
     unsigned long len = sizeof (Stack) - 2 * sizeof (int64_t);
 
-    stack->stack_hash = stack_hash_func (stack, len);
+    stack->stack_hash = stack_hash_func ((char *) stack, len);
 
     return 0; 
 }
@@ -101,19 +101,9 @@ int stack_update_data_hash (Stack *stack)
 {
     assert (stack);
 
-    #ifdef CANARIES
+    unsigned long len = stack->capacity * sizeof (elem_t);
 
-        char *data = (char *) stack->data - sizeof (int64_t);
-        unsigned long len = stack->capacity * sizeof (elem_t) + 2 * sizeof (int64_t);
-
-    #else 
-
-        char *data = (char *) stack->data;
-        unsigned long len = stack->capacity * sizeof (elem_t);
-
-    #endif
-
-    stack->data_hash = stack_hash_func (data, len);
+    stack->data_hash = stack_hash_func (stack->data, len);
 
     return 0;
 }
@@ -127,7 +117,7 @@ int stack_update_data_hash (Stack *stack)
 int set_stack_hash_func (int64_t (*get_hash_func) (void *base, unsigned long len))
 {
     if (get_hash_func == NULL) {
-        print_error (NULL_PTR_ERR);
+        print_error ("Null pointer to hash function.");
         return NULL_PTR_ERR;
     }
 

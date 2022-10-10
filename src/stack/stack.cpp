@@ -9,7 +9,10 @@
 
 //------------------------------------------------------------------
 
-static int var_info_ctor (Var_info *info, const char *var_name, const char *func, const char *file, unsigned int line)
+#ifdef DEBUG
+
+static int var_info_ctor (Var_info *info, const char *var_name, 
+                          const char *func, const char *file, unsigned int line)
 {
     assert (info);
 
@@ -21,9 +24,12 @@ static int var_info_ctor (Var_info *info, const char *var_name, const char *func
     return 0;
 } 
 
+#endif
+
 //------------------------------------------------------------------
 
-int _stack_ctor (Stack *stack DEBUG_ARGS(, const char *var_name, const char *file, const unsigned int line, const char *func))  
+int _stack_ctor (Stack *stack DEBUG_ARGS(, const char *var_name, 
+                const char *file, const unsigned int line, const char *func))  
 {
     assert (stack);
     stack->data = (elem_t *) NOT_ALLOC_YET_PTR;
@@ -66,13 +72,6 @@ static int _set_data_canaries (Stack *stack)
 {
     int err = 0;
 
-    // #ifdef DEBUG
-
-    //     err = stack_verify (stack);                
-    //     if (err < 0) return err;
-
-    // #endif
-
     int64_t *canary_l = (int64_t *) stack->data - 1;
     *canary_l = CANARY_VALUE;
     
@@ -107,18 +106,8 @@ static int _set_data (Stack *stack, int size)
 {
     int err = 0;
 
-
-    // #ifdef DEBUG
-
-    //     err = stack_verify(stack);
-    //     if (err < 0) {
-    //         printf ("verify\n");
-    //         return err;
-    //     }
-    // #endif
-
     if (size < 1) {
-        print_error (SET_DATA_ERR);
+        print_error ("Set data error: cannot set size of data %d", size);
         return SET_DATA_ERR;
     }
 
@@ -126,7 +115,7 @@ static int _set_data (Stack *stack, int size)
 
     #ifdef CANARIES
 
-        elem_t *data_ptr = (elem_t *) calloc (size * sizeof(elem_t) + 2 * sizeof(int64_t), sizeof(char));
+        elem_t *data_ptr = (elem_t *) calloc ((size_t) size * sizeof(elem_t) + 2 * sizeof(int64_t), sizeof(char));
 
     #else
 
@@ -135,8 +124,8 @@ static int _set_data (Stack *stack, int size)
     #endif
 
     if (data_ptr == NULL) {
-        print_error (NULL_PTR_ERR);          
-        return NULL_PTR_ERR;
+        print_error ("Can not allocate memory.");          
+        return NO_MEMORY_ERR;
     }
 
     else {
@@ -201,7 +190,7 @@ static void *_my_recalloc (void *ptr, size_t number, size_t prev_number, size_t 
 
 //------------------------------------------------------------------
 
-static int _stack_resize (Stack *stack, int mode)
+static int _stack_resize (Stack *stack, Modes mode)
 {
     int err = 0;
 
@@ -231,7 +220,7 @@ static int _stack_resize (Stack *stack, int mode)
         }
 
         default: {
-            print_error (RESIZE_MOD_ERR);
+            print_error ("Unexpected resize mod: %d", mode);
             return RESIZE_MOD_ERR;
         }
     }
@@ -247,13 +236,16 @@ static int _stack_resize (Stack *stack, int mode)
 
     #else
 
-        elem_t *new_data = (elem_t *) _my_recalloc (stack->data, stack->capacity, prev_capacity, sizeof (elem_t));
+        size_t      size = stack->capacity * sizeof (elem_t);
+        size_t prev_size =   prev_capacity * sizeof (elem_t);
+
+        char *new_data = (char *) _my_recalloc (stack->data, stack->capacity, prev_capacity, sizeof (elem_t));
 
     #endif
 
     if (new_data == NULL) {
 
-        print_error (RECALLOC_ERR);
+        print_error ("Can not allocate memory with _my_recalloc().");
         return RECALLOC_ERR;
     
     }
@@ -262,14 +254,14 @@ static int _stack_resize (Stack *stack, int mode)
 
         #ifdef CANARIES
 
-            char *data_ptr = (char *) new_data + sizeof(int64_t);
+            char *data_ptr = new_data + sizeof(int64_t);
             stack->data = (elem_t *) data_ptr;
 
             _set_data_canaries (stack);
 
         #else 
 
-            stack->data = new_data;
+            stack->data = (elem_t *) new_data;
 
         #endif
     }
@@ -302,10 +294,7 @@ int stack_push (Stack *stack, elem_t value)
     #ifdef DEBUG
 
         err = stack_verify(stack);
-        if (err < 0) {
-            printf ("verify\n");
-            return err;
-        }
+        if (err < 0) return err;
 
     #endif
 
@@ -318,7 +307,7 @@ int stack_push (Stack *stack, elem_t value)
         err = _stack_resize (stack, INCREASE);
         if (err) return err;     
     }
-    printf ("%d  %d\n", stack->capacity, stack->size);
+    printf ("%lu  %lu\n", stack->capacity, stack->size);
 
     stack->data[stack->size++] = value;
 
@@ -333,7 +322,6 @@ int stack_push (Stack *stack, elem_t value)
             if (err < 0) return err;
 
         #endif
-    printf ("%d  %d\n", stack->capacity, stack->size);
 
         err = stack_verify (stack);          ///umer
         if (err < 0) return err;
@@ -365,7 +353,7 @@ elem_t stack_pop (Stack *stack)
     elem_t *poped_elem = stack->data + stack->size;
 
     if (memset (poped_elem, 0, sizeof (elem_t)) == NULL) {
-        print_error (MEMSET_ERR);
+        print_error ("Memset error.");
         return MEMSET_ERR;
     }
 
@@ -436,9 +424,9 @@ int stack_dtor (Stack *stack)
 
         Var_info *info = stack->info;
 
-        info->name = POISON_NAME;
-        info->func = POISON_NAME;  
-        info->file = POISON_NAME;
+        info->name = "POISONED";
+        info->func = "POISONED";  
+        info->file = "POISONED";
         info->line = POISON_VALUE;
 
         free (stack->info);

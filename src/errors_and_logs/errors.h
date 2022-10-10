@@ -41,8 +41,8 @@ enum general_errors {
 #define stack_pop_verify(stack) \
         _stack_pop_verify (stack, LOCATION) 
 
-#define print_error(error) \
-        _print_error(error, stderr, LOCATION)
+#define print_error(...) \
+        _print_error(LOCATION, __VA_ARGS__)
 
 //------------------------------------------------------------------
 
@@ -56,6 +56,6 @@ int stack_canary_verify (Stack *stack);
 
 int print_stack_error (int errors);
 
-int _print_error (int error, FILE *err_file, const char *file, const unsigned line, const char *func);
+int _print_error ( const char *file, const unsigned line, const char *func, const char *format, ...);
 
 int _stack_dump (Stack *stack, const char *file, const unsigned line, const char *func);
