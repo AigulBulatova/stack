@@ -1,7 +1,7 @@
-#include "errors.h"
-
 #include <stdio.h>
 #include <assert.h>
+
+#include "errors.h"
 
 //------------------------------------------------------------------
 

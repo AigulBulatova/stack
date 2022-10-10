@@ -1,1 +1,3 @@
 obj/
+stack
+src/errors_and_logs/log_file.txt

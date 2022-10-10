@@ -1,80 +1,17 @@
+#include <stdio.h>
+#include <assert.h>
+
 #include "stack_hash.h"
 #include "../stack/stack.h"
 #include "../errors_and_logs/errors.h"
 #include "../../config.h"
-
-#include <stdio.h>
-#include <assert.h>
+#include "../general/general.h"
 
 //------------------------------------------------------------------
 
 typedef int64_t (*hash_func) (void *base, unsigned long len);
 
 static hash_func stack_hash_func = DEFAULT_HASH_FUNC;
-
-//------------------------------------------------------------------
-
-#ifdef HASH 
-
-int64_t get_hash (void *base, unsigned long len) 
-{
-    const unsigned int m = 0x5bd1e995;
-    const unsigned int seed = 0;
-    const int r = 24;
-
-    unsigned long h = seed ^ len;
-
-    const unsigned char *data = (const unsigned char *) base;
-    assert (base);
-
-    unsigned int k = 0;
-
-    while (len >= 4) {
-
-        k  = (unsigned) data[0];
-        k |= (unsigned) (data[1] << 8);
-        k |= (unsigned) (data[2] << 16);
-        k |= (unsigned) (data[3] << 24);
-
-        k *= m;
-        k ^= k >> r;
-        k *= m;
-
-        h *= m;
-        h ^= k;
-
-        data += 4;
-        len  -= 4;
-
-    }
-
-    switch (len)
-    {
-        case 3: {
-            h ^= data[2] << 16;
-            break;
-        }
-
-        case 2: {
-            h ^= data[1] << 8;
-            break;
-        }
-        
-        case 1: {
-            h ^= data[0];
-            h *= m;
-            break;
-        }
-    };
-
-    h ^= h >> 13;
-    h *= m;
-    h ^= h >> 15;
-
-    return  (unsigned) h;
-}
-
-#endif
 
 //------------------------------------------------------------------
 

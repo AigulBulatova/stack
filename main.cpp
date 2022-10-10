@@ -16,16 +16,36 @@ int main ()
     
     Stack stk1 = {};
     stack_ctor (&stk1);
-    //printf ("%s  %s  %s  %u\n", stk1.info->name, stk1.info->func, stk1.info->file, stk1.info->line);
     
     error = stack_push (&stk1, 5);
     if (error < 0) {
         printf ("ERROR\n");
     }
 
+    error = stack_push (&stk1, 6);
+    if (error < 0) {
+        printf ("ERROR\n");
+    }
+
+    error = stack_push (&stk1, 10);
+    if (error < 0) {
+        printf ("ERROR\n");
+    }
+
+    elem_t a = stack_pop(&stk1);
+
+    printf ("%lf\n", a);
+
     _stack_dump(&stk1, __FILE__, __LINE__, __FUNCTION__);
 
     stack_dtor (&stk1);
+
+    #ifdef DEBUG
+
+        error = close_logfile ();
+        if (error < 0) return error;
+        
+    #endif
 
     return 0;
 }

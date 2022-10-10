@@ -1,9 +1,11 @@
+#include <assert.h>
+#include <math.h>
+
 #include "errors.h"
 #include "logs.h"
 #include "../stack_hash/stack_hash.h"
 #include "../../config.h"
-
-#include <assert.h>
+#include "../general/general.h"
 
 //------------------------------------------------------------------
 
@@ -26,25 +28,23 @@ int _stack_dump (Stack *stack, const char *file, const unsigned line, const char
     print_stack_error (stack->error_code);
     
     print_to_log ("See more information about stack %s", info->name);
-    print_to_log ("{\n\t size = %lu\n\t capacity = %lu\n\t data = [%p]\n {\n", 
+    print_to_log ("{\n\t size = %lu\n\t capacity = %lu\n\t data = [%p]\n\n\t{\n", 
                         stack->size, stack->capacity, stack->data);
 
     for (int i = 0; i < stack->capacity; i++) {
 
-        if (stack->data[i] == POISON_VALUE) {
-            print_to_log ("\t\t*[%d] = ", i);
-            print_to_log ("%lf", stack->data[i]);
-            print_to_log ("\t(POISON)\n");
+        if (fabs (stack->data[i] - POISON_VALUE) <= 1e-6) {
+            print_to_log ("\t\t*[%d] = " TYPE_SPEC " \t(POISON) ", i, stack->data[i]);
+            print_to_log ("\n");
         }
 
         else {
-            print_to_log ("\t\t[%d] = ", i); 
-            print_to_log (TYPE_SPEC, stack->data[i]);
+            print_to_log ("\t\t[%d] = " TYPE_SPEC " ", i, stack->data[i]); 
             print_to_log ("\n");   
         }      
     }
 
-    print_to_log ("}\n");
+    print_to_log ("\t}\n}\n");
 
     #ifdef CANARIES
 
@@ -55,7 +55,7 @@ int _stack_dump (Stack *stack, const char *file, const unsigned line, const char
     if (stack->data != (elem_t *) NOT_ALLOC_YET_PTR) {
 
         int64_t *data_canary1 = (int64_t *) ((char *)stack->data - sizeof(int64_t));
-        int64_t *data_canary2 = (int64_t *) ((char *)stack->data + stack->capacity);
+        int64_t *data_canary2 = (int64_t *) ((char *)stack->data + sizeof (elem_t) * stack->capacity);
 
         print_to_log ("\tData canaries: \n\t\tdata_canary1 = %ld \n\t\tdata_canary2 = %ld\n", *data_canary1, *data_canary2);
     }
@@ -63,6 +63,9 @@ int _stack_dump (Stack *stack, const char *file, const unsigned line, const char
     #endif
 
     #ifdef HASH
+
+        print_to_log ("Stack hash = %ld\n", stack->stack_hash);
+        print_to_log ("Data hash = %ld\n", stack->data_hash);
 
 
     #endif

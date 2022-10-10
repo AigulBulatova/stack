@@ -3,6 +3,7 @@ OBJ   = obj/main.o      \
 		obj/errors.o    \
 		obj/logs.o 		\
 		obj/hash.o 		\
+		obj/general.o   \
 
 
 
@@ -44,17 +45,20 @@ global: $(OBJ)
 obj/main.o: main.cpp src/stack/stack.h config.h src/errors_and_logs/errors.h src/errors_and_logs/logs.h
 	g++ main.cpp -c -o obj/main.o $(FLAGS)
 
-obj/stack.o: src/stack/stack.cpp src/stack/stack.h config.h src/errors_and_logs/errors.h src/stack_hash/stack_hash.h
+obj/stack.o: src/stack/stack.cpp src/stack/stack.h config.h src/errors_and_logs/errors.h src/stack_hash/stack_hash.h src/general/general.h
 	g++ src/stack/stack.cpp -c -o obj/stack.o $(FLAGS)
 
-obj/errors.o: src/errors_and_logs/errors.cpp src/errors_and_logs/errors.h src/errors_and_logs/logs.h src/stack_hash/stack_hash.h config.h
+obj/errors.o: src/errors_and_logs/errors.cpp src/errors_and_logs/errors.h src/errors_and_logs/logs.h src/stack_hash/stack_hash.h config.h src/general/general.h
 	g++ src/errors_and_logs/errors.cpp -c -o obj/errors.o $(FLAGS)
 
-obj/logs.o: src/errors_and_logs/logs.cpp src/errors_and_logs/logs.h config.h src/errors_and_logs/errors.h
+obj/logs.o: src/errors_and_logs/logs.cpp src/errors_and_logs/logs.h config.h src/errors_and_logs/errors.h 
 	g++ src/errors_and_logs/logs.cpp -c -o obj/logs.o $(FLAGS)
 
-obj/hash.o: src/stack_hash/stack_hash.cpp src/stack_hash/stack_hash.h src/stack/stack.h config.h src/errors_and_logs/errors.h
+obj/hash.o: src/stack_hash/stack_hash.cpp src/stack_hash/stack_hash.h src/stack/stack.h config.h src/errors_and_logs/errors.h src/general/general.h
 	g++ src/stack_hash/stack_hash.cpp -c -o obj/hash.o $(FLAGS)
+
+obj/general.o: src/general/general.cpp src/general/general.h 
+	g++ src/general/general.cpp -c -o obj/general.o $(FLAGS)
 
 .PHONY: cleanup
 

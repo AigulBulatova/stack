@@ -1,9 +1,10 @@
 #pragma once
 
-#include "../stack/stack.h"
-
 #include <stdarg.h>
 
+#include "../stack/stack.h"
+
+//------------------------------------------------------------------
 
 #define print_log_messsage(...) \
         _print_log_messsage(LOCATION, __VA_ARGS__)

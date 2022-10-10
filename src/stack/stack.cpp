@@ -1,11 +1,12 @@
+#include <stdlib.h>
+#include <string.h>
+#include <assert.h>
+
 #include "stack.h"
 #include "../errors_and_logs/errors.h"
 #include "../stack_hash/stack_hash.h"
 #include "../../config.h"
-
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
+#include "../general/general.h"
 
 //------------------------------------------------------------------
 
@@ -70,31 +71,12 @@ int _stack_ctor (Stack *stack DEBUG_ARGS(, const char *var_name,
 
 static int _set_data_canaries (Stack *stack)
 {
-    int err = 0;
-
     int64_t *canary_l = (int64_t *) stack->data - 1;
     *canary_l = CANARY_VALUE;
     
     int64_t *canary_r = (int64_t *) (stack->data + stack->capacity);
     *canary_r = CANARY_VALUE;
-    printf ("%p  %p  %p\n", canary_l, stack->data, canary_r);   
-
-    #ifdef DEBUG
-
-        #ifdef HASH
-
-            err = stack_update_data_hash (stack);
-            if (err < 0) return err;
-
-        #endif
-
-        err = stack_verify (stack);
-        if (err < 0) return err;
-
-    #endif
-
-
-
+    
     return 0;
 }
 
@@ -307,7 +289,6 @@ int stack_push (Stack *stack, elem_t value)
         err = _stack_resize (stack, INCREASE);
         if (err) return err;     
     }
-    printf ("%lu  %lu\n", stack->capacity, stack->size);
 
     stack->data[stack->size++] = value;
 
