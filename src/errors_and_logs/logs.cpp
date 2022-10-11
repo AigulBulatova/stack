@@ -57,7 +57,8 @@ int _print_log_messsage (const char *file, const unsigned line, const char *func
     assert (file);
     assert (func);
 
-    fprintf (log_file, "Log message from file %s, function %s (line number %ul):\n", file, func, line);
+    fprintf (log_file, "Log message from file %s, function %s (line number %ul):\n",
+                         file, func, line);
 
     va_list args = {};
 

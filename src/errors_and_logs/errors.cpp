@@ -28,36 +28,36 @@ int _stack_dump (Stack *stack, const char *file, const unsigned line, const char
     print_stack_error (stack->error_code);
     
     print_to_log ("See more information about stack %s", info->name);
-    print_to_log ("{\n\t size = %lu\n\t capacity = %lu\n\t data = [%p]\n\n\t{\n", 
-                        stack->size, stack->capacity, stack->data);
+    print_to_log ("{\n\t size = %lu\n\t capacity = %lu\n\t data = [%p]\n\t self_pointer = [%p]\n\n\t{", 
+                        stack->size, stack->capacity, stack->data, stack->self_prt);
 
     for (int i = 0; i < stack->capacity; i++) {
 
         if (fabs (stack->data[i] - POISON_VALUE) <= 1e-6) {
             print_to_log ("\t\t*[%d] = " TYPE_SPEC " \t(POISON) ", i, stack->data[i]);
-            print_to_log ("\n");
         }
 
         else {
-            print_to_log ("\t\t[%d] = " TYPE_SPEC " ", i, stack->data[i]); 
-            print_to_log ("\n");   
+            print_to_log ("\t\t[%d] = " TYPE_SPEC " ", i, stack->data[i]);    
         }      
     }
 
-    print_to_log ("\t}\n}\n");
+    print_to_log ("\t}\n\n");
 
     #ifdef CANARIES
 
         print_to_log ("Values of canaries: \n");
         
-        print_to_log ("\tStack canaries: \n\t\tstack_canary1 = %ld \n\t\tstack_canary2 = %ld\n", stack->canary1, stack->canary2);
+        print_to_log ("\tStack canaries: \n\t\tstack_canary1 = %X \n\t\tstack_canary2 = %X\n",
+                         stack->canary1, stack->canary2);
 
     if (stack->data != (elem_t *) NOT_ALLOC_YET_PTR) {
 
         int64_t *data_canary1 = (int64_t *) ((char *)stack->data - sizeof(int64_t));
         int64_t *data_canary2 = (int64_t *) ((char *)stack->data + sizeof (elem_t) * stack->capacity);
 
-        print_to_log ("\tData canaries: \n\t\tdata_canary1 = %ld \n\t\tdata_canary2 = %ld\n", *data_canary1, *data_canary2);
+        print_to_log ("\tData canaries: \n\t\tdata_canary1 = %X \n\t\tdata_canary2 = %X\n",
+                         *data_canary1, *data_canary2);
     }
 
     #endif
@@ -90,43 +90,31 @@ int _stack_verify (Stack *stack, const char *file, const unsigned line, const ch
     if (stack == NULL) {
         errors += STK_STRUCT_NULL_PTR;
     }
-    if (errors != 0) {
-        printf ("%d\n", errors);
+
+    if (stack->self_prt != stack) {
+        errors += STK_SELF_PTR_ERR;
     }
 
     if (stack->size < 0) {
         errors += STK_INV_SIZE;
     }
-    if (errors != 0) {
-        printf ("%d\n", errors);
-    }
 
     if (stack->capacity < 0) {
         errors += STK_INV_CAPACITY;
-    }
-    if (errors != 0) {
-        printf ("%d\n", errors);
     }
 
     if (stack->size > stack->capacity) {
         errors += STK_CAP_LESS_SIZE;
     }
-    if (errors != 0) {
-        printf ("%d\n", errors);
-    }
 
     if (stack->size >= MAXCAPACITY || stack->capacity > MAXCAPACITY) {
         errors += STK_OVERFLOW;
     }
-    if (errors != 0) {
-        printf ("%d\n", errors);
-    }
 
-    if (stack->capacity > 0 && (stack->data == NULL || stack->data == (elem_t *) NOT_ALLOC_YET_PTR)) {
+    if (stack->capacity > 0 && (stack->data == NULL || 
+        stack->data == (elem_t *) NOT_ALLOC_YET_PTR)) {
+
         errors += STK_INV_DATA_PTR;
-    }
-    if (errors != 0) {
-        printf ("%d\n", errors);
     }
 
     #ifdef CANARIES
@@ -147,9 +135,7 @@ int _stack_verify (Stack *stack, const char *file, const unsigned line, const ch
 
             errors += STK_DATA_HASH_ERR;
         }
-            if (errors != 0) {
-        printf ("%d\n", errors);
-    }
+    
 
 
     #endif
@@ -297,6 +283,10 @@ int print_stack_error (int errors)
     
     if (errors & STK_DATA_HASH_ERR) {
         print_to_log ("Stack data hash protection was broken.\n");
+    }
+
+    if (errors & STK_SELF_PTR_ERR) {
+        print_to_log ("Self pointer does not point to stack.\n");
     }
 
     return 0;

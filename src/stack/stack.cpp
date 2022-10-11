@@ -37,7 +37,6 @@ int _stack_ctor (Stack *stack DEBUG_ARGS(, const char *var_name,
 
     stack->capacity = 0;
     stack->size = 0;
-    stack->error_code = 0;
     
     #ifdef DEBUG
 
@@ -48,10 +47,14 @@ int _stack_ctor (Stack *stack DEBUG_ARGS(, const char *var_name,
 
         #endif
 
+        stack->error_code = 0;
+
         Var_info *info = (Var_info *) calloc (1, sizeof (Var_info));
         var_info_ctor (info, var_name, func, file, line);
 
         stack->info = info;
+
+        stack->self_prt = stack;
 
         #ifdef HASH
 
@@ -86,8 +89,6 @@ static int _set_data_canaries (Stack *stack)
 
 static int _set_data (Stack *stack, int size) 
 {
-    int err = 0;
-
     if (size < 1) {
         print_error ("Set data error: cannot set size of data %d", size);
         return SET_DATA_ERR;
@@ -97,11 +98,12 @@ static int _set_data (Stack *stack, int size)
 
     #ifdef CANARIES
 
-        elem_t *data_ptr = (elem_t *) calloc ((size_t) size * sizeof(elem_t) + 2 * sizeof(int64_t), sizeof(char));
+        elem_t *data_ptr = (elem_t *) calloc ((size_t) size * sizeof(elem_t)
+                                                 + 2 * sizeof(int64_t), sizeof(char));
 
     #else
 
-        elem_t *data_ptr = (elem_t *) calloc (size, sizeof(elem_t));
+        elem_t *data_ptr = (elem_t *) calloc ((size_t) size, sizeof(elem_t));
 
     #endif
 
@@ -128,6 +130,8 @@ static int _set_data (Stack *stack, int size)
     }
 
     #ifdef DEBUG
+
+        int err = 0;
 
         #ifdef HASH
 
@@ -218,9 +222,6 @@ static int _stack_resize (Stack *stack, Modes mode)
 
     #else
 
-        size_t      size = stack->capacity * sizeof (elem_t);
-        size_t prev_size =   prev_capacity * sizeof (elem_t);
-
         char *new_data = (char *) _my_recalloc (stack->data, stack->capacity, prev_capacity, sizeof (elem_t));
 
     #endif
@@ -304,7 +305,7 @@ int stack_push (Stack *stack, elem_t value)
 
         #endif
 
-        err = stack_verify (stack);          ///umer
+        err = stack_verify (stack);          
         if (err < 0) return err;
 
     #endif
@@ -367,9 +368,9 @@ elem_t stack_pop (Stack *stack)
 
 int stack_dtor (Stack *stack)
 {   
-    int err = 0;
-
     #ifdef DEBUG
+
+        int err = 0;
 
         err = stack_verify (stack);
         if (err < 0) return err;

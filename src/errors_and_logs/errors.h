@@ -20,6 +20,7 @@ enum stack_rrors {
     STK_STRUCT_HASH_ERR    = 0x800,
     STK_DATA_HASH_ERR      = 0x1000,
     STK_INV_DATA_PTR       = 0x2000,
+    STK_SELF_PTR_ERR       = 0x4000,
 };
 
 enum general_errors {

@@ -11,7 +11,11 @@
 
 typedef int64_t (*hash_func) (void *base, unsigned long len);
 
+#ifdef HASH
+
 static hash_func stack_hash_func = DEFAULT_HASH_FUNC;
+
+#endif
 
 //------------------------------------------------------------------
 

@@ -52,6 +52,7 @@ struct Stack {
     #ifdef DEBUG
 
         Var_info *info;
+        Stack *self_prt;
 
         int error_code;
 
@@ -77,9 +78,6 @@ struct Stack {
         _stack_ctor(stack DEBUG_ARGS(, #stack + 1, LOCATION))
 
 //------------------------------------------------------------------
-
-// оставить в хедере только те функции, которые входят в API (push. pop. dtor. ctor)
-//  остальыне - статик в cpp файле + имя начинается на _
 
 int _stack_ctor (Stack *stack DEBUG_ARGS(, const char *func_name, const char *file, const unsigned int line, const char *func));
 

@@ -9,7 +9,7 @@ int main ()
 
     #ifdef DEBUG
 
-        error = open_logfile ("src/errors_and_logs/log_file.txt", "w");
+        error = open_logfile ("/tmp/log_file.txt", "w");
         if (error < 0) return error;
         
     #endif
@@ -18,19 +18,13 @@ int main ()
     stack_ctor (&stk1);
     
     error = stack_push (&stk1, 5);
-    if (error < 0) {
-        printf ("ERROR\n");
-    }
+    if (error < 0) return error;
 
     error = stack_push (&stk1, 6);
-    if (error < 0) {
-        printf ("ERROR\n");
-    }
+    if (error < 0) return error;
 
     error = stack_push (&stk1, 10);
-    if (error < 0) {
-        printf ("ERROR\n");
-    }
+    if (error < 0) return error;
 
     elem_t a = stack_pop(&stk1);
 
