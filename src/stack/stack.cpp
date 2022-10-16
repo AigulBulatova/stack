@@ -3,8 +3,8 @@
 #include <assert.h>
 
 #include "stack.h"
+#include "stack_debug.h"
 #include "../errors_and_logs/errors.h"
-#include "../stack_hash/stack_hash.h"
 #include "../../config.h"
 #include "../general/general.h"
 
@@ -70,20 +70,20 @@ int _stack_ctor (Stack *stack DEBUG_ARGS(, const char *var_name,
 
 //------------------------------------------------------------------
 
-#ifdef CANARIES
+// #ifdef CANARIES
 
-static int _set_data_canaries (Stack *stack)
-{
-    int64_t *canary_l = (int64_t *) stack->data - 1;
-    *canary_l = CANARY_VALUE;
+// static int _set_data_canaries (Stack *stack)
+// {
+//     int64_t *canary_l = (int64_t *) stack->data - 1;
+//     *canary_l = CANARY_VALUE;
     
-    int64_t *canary_r = (int64_t *) (stack->data + stack->capacity);
-    *canary_r = CANARY_VALUE;
+//     int64_t *canary_r = (int64_t *) (stack->data + stack->capacity);
+//     *canary_r = CANARY_VALUE;
     
-    return 0;
-}
+//     return 0;
+// }
 
-#endif
+// #endif
 
 //------------------------------------------------------------------
 

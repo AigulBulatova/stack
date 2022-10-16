@@ -1,4 +1,5 @@
 #include "src/stack/stack.h"
+#include "src/stack/stack_debug.h"
 #include "src/errors_and_logs/errors.h"
 #include "src/errors_and_logs/logs.h"
 #include "config.h"
